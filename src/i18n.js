@@ -59,10 +59,10 @@ const DIFFICULTY_TEXT = {
     random: { badge: "乱", label: "ランダム" },
   },
   en: {
-    easy: { badge: "E", label: "7 moves" },
-    medium: { badge: "M", label: "10 moves" },
-    hard: { badge: "H", label: "15 moves" },
-    random: { badge: "R", label: "Random" },
+    easy: { badge: "Easy", label: "7 moves" },
+    medium: { badge: "Medium", label: "10 moves" },
+    hard: { badge: "High", label: "15 moves" },
+    random: { badge: "Random", label: "Random" },
   },
 };
 
