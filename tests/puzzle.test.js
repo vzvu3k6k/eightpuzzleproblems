@@ -61,11 +61,29 @@ test("puzzle generator returns exact distance per difficulty", () => {
   const index = buildStateIndex();
   const generatePuzzle = createPuzzleGenerator(index);
 
-  for (const diff of DIFFICULTIES) {
+  const fixedDiffs = DIFFICULTIES.filter((d) => Number.isInteger(d.moves));
+  for (const diff of fixedDiffs) {
     for (let i = 0; i < 5; i += 1) {
       const puzzle = generatePuzzle(diff.moves);
       assert.equal(puzzle.optimal, diff.moves);
       assert.equal(getOptimalFromIndex(index, puzzle.board), diff.moves);
     }
+  }
+});
+
+test("random difficulty range stays within configured bounds", () => {
+  const index = buildStateIndex();
+  const generatePuzzle = createPuzzleGenerator(index);
+  const randomDiff = DIFFICULTIES.find((d) => d.id === "random");
+
+  assert.ok(randomDiff);
+  assert.ok(Array.isArray(randomDiff.randomRange));
+  const [min, max] = randomDiff.randomRange;
+
+  for (let i = 0; i < 50; i += 1) {
+    const target = Math.floor(Math.random() * (max - min + 1)) + min;
+    const puzzle = generatePuzzle(target);
+    assert.ok(puzzle.optimal >= min && puzzle.optimal <= max);
+    assert.equal(getOptimalFromIndex(index, puzzle.board), puzzle.optimal);
   }
 });

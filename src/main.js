@@ -35,9 +35,27 @@ function update() {
   renderApp(root, state);
 }
 
+function randomIntInclusive(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function pickTargetMoves(diff) {
+  if (Number.isInteger(diff.moves)) return diff.moves;
+
+  if (Array.isArray(diff.randomRange) && diff.randomRange.length === 2) {
+    const [min, max] = diff.randomRange;
+    if (Number.isInteger(min) && Number.isInteger(max) && min <= max) {
+      return randomIntInclusive(min, max);
+    }
+  }
+
+  throw new Error(`Unsupported difficulty config: ${diff.id}`);
+}
+
 function startPuzzle(diff) {
+  const targetMoves = pickTargetMoves(diff);
   state.difficulty = diff;
-  state.puzzle = generatePuzzle(diff.moves);
+  state.puzzle = generatePuzzle(targetMoves);
   state.board = [...state.puzzle.board];
   state.moveCount = 0;
   state.history = [state.puzzle.board];
@@ -139,10 +157,9 @@ function handleKeyDown(e) {
   }
 }
 
-function parseMoves(value) {
-  const moves = Number(value);
-  if (!Number.isFinite(moves)) return null;
-  return DIFFICULTIES.find((d) => d.moves === moves) || null;
+function parseDifficulty(value) {
+  if (!value) return null;
+  return DIFFICULTIES.find((d) => d.id === value) || null;
 }
 
 function handleActionClick(event) {
@@ -152,7 +169,7 @@ function handleActionClick(event) {
   const action = button.dataset.action;
 
   if (action === "start") {
-    const diff = parseMoves(button.dataset.moves);
+    const diff = parseDifficulty(button.dataset.difficultyId);
     if (diff) startPuzzle(diff);
     return;
   }

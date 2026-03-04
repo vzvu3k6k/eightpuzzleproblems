@@ -17,10 +17,10 @@ const PERMUTATION_COUNT = FACTORIAL[9];
 const UNREACHABLE = 255;
 
 export const DIFFICULTIES = [
-  { label: "三手", moves: 3, kanji: "初" },
-  { label: "五手", moves: 5, kanji: "中" },
-  { label: "七手", moves: 7, kanji: "上" },
-  { label: "十手", moves: 10, kanji: "極" },
+  { id: "easy", label: "七手", moves: 7, kanji: "初" },
+  { id: "medium", label: "十手", moves: 10, kanji: "中" },
+  { id: "hard", label: "十五手", moves: 15, kanji: "上" },
+  { id: "random", label: "ランダム", randomRange: [10, 31], kanji: "乱" },
 ];
 
 export function findBlank(board) {

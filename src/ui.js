@@ -29,7 +29,7 @@ export function renderTitleScreen(container) {
   DIFFICULTIES.forEach((d) => {
     const button = el("button", styles.diffButton);
     button.dataset.action = "start";
-    button.dataset.moves = String(d.moves);
+    button.dataset.difficultyId = d.id;
 
     withHoverStyle(
       button,
