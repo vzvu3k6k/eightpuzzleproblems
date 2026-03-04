@@ -29,6 +29,7 @@ const state = {
   history: [],
   result: null,
   animatingTile: null,
+  usedSolveOne: false,
   puzzleNumber: 1,
 };
 
@@ -66,6 +67,7 @@ function startPuzzle(diff) {
   state.history = [state.puzzle.board];
   state.result = null;
   state.animatingTile = null;
+  state.usedSolveOne = false;
   update();
 }
 
@@ -124,6 +126,7 @@ function handleSolveOne() {
     const nextDistance = puzzleIndex.distanceByRank[nextRank];
 
     if (nextDistance === currentDistance - 1) {
+      state.usedSolveOne = true;
       handleTileClick(idx);
       return;
     }
@@ -138,6 +141,7 @@ function handleReset() {
   state.history = [state.puzzle.board];
   state.result = null;
   state.animatingTile = null;
+  state.usedSolveOne = false;
 
   update();
 }
@@ -157,6 +161,7 @@ function handleBack() {
   state.result = null;
   state.animatingTile = null;
   state.puzzleNumber = 1;
+  state.usedSolveOne = false;
   update();
 }
 

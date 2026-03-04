@@ -156,7 +156,7 @@ function createResultOverlay(state) {
   }
 
   const resultButtons = el("div", styles.resultButtons);
-  if (state.result === "wrong") {
+  if (state.result === "wrong" || state.usedSolveOne) {
     resultButtons.appendChild(makeButton(getMessage(locale, "retry"), styles.resultBtn, "reset"));
   }
   resultButtons.appendChild(makeButton(getMessage(locale, "next"), styles.resultBtn, "next"));
