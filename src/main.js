@@ -1,7 +1,8 @@
 import {
   DIFFICULTIES,
+  buildStateIndex,
+  createPuzzleGenerator,
   findBlank,
-  generatePuzzle,
   getNeighbors,
   isSolved,
   swap,
@@ -13,6 +14,9 @@ const root = document.getElementById("app");
 if (!root) {
   throw new Error("#app element not found");
 }
+
+const puzzleIndex = buildStateIndex();
+const generatePuzzle = createPuzzleGenerator(puzzleIndex);
 
 const state = {
   difficulty: null,

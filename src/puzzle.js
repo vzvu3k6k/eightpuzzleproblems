@@ -12,6 +12,10 @@ const NEIGHBOR_MAP = {
   8: [5, 7],
 };
 
+const FACTORIAL = [1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880];
+const PERMUTATION_COUNT = FACTORIAL[9];
+const UNREACHABLE = 255;
+
 export const DIFFICULTIES = [
   { label: "三手", moves: 3, kanji: "初" },
   { label: "五手", moves: 5, kanji: "中" },
@@ -33,10 +37,6 @@ export function swap(board, i, j) {
   return b;
 }
 
-export function boardKey(board) {
-  return board.join(",");
-}
-
 export function isSolved(board) {
   for (let i = 0; i < SOLVED.length; i += 1) {
     if (board[i] !== SOLVED[i]) return false;
@@ -44,79 +44,128 @@ export function isSolved(board) {
   return true;
 }
 
-// BFS to find optimal solution length
-export function optimalMoves(board) {
-  if (isSolved(board)) return 0;
+export function rankBoard(board) {
+  let rank = 0;
 
-  const visited = new Set([boardKey(board)]);
-  let queue = [{ board, depth: 0 }];
-
-  while (queue.length > 0) {
-    const next = [];
-
-    for (const { board: b, depth } of queue) {
-      const blank = findBlank(b);
-
-      for (const n of getNeighbors(blank)) {
-        const nb = swap(b, blank, n);
-        const key = boardKey(nb);
-
-        if (isSolved(nb)) return depth + 1;
-
-        if (!visited.has(key)) {
-          visited.add(key);
-          next.push({ board: nb, depth: depth + 1 });
-        }
-      }
+  for (let i = 0; i < board.length; i += 1) {
+    let smaller = 0;
+    for (let j = i + 1; j < board.length; j += 1) {
+      if (board[j] < board[i]) smaller += 1;
     }
-
-    queue = next;
+    rank += smaller * FACTORIAL[board.length - 1 - i];
   }
 
-  return -1;
+  return rank;
 }
 
-function randomWalkFromSolved(steps) {
-  let board = [...SOLVED];
-  let lastBlank = -1;
+export function unrankBoard(rank) {
+  if (!Number.isInteger(rank) || rank < 0 || rank >= PERMUTATION_COUNT) {
+    throw new Error(`rank out of range: ${rank}`);
+  }
 
-  for (let i = 0; i < steps; i += 1) {
-    const blank = findBlank(board);
-    const neighbors = getNeighbors(blank).filter((n) => n !== lastBlank);
-    const pick = neighbors[Math.floor(Math.random() * neighbors.length)];
-    lastBlank = blank;
-    board = swap(board, blank, pick);
+  const available = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+  const board = [];
+  let remain = rank;
+
+  for (let i = 8; i >= 0; i -= 1) {
+    const base = FACTORIAL[i];
+    const q = Math.floor(remain / base);
+    remain %= base;
+    board.push(available.splice(q, 1)[0]);
   }
 
   return board;
 }
 
-export function generatePuzzle(
-  targetMoves,
-  opts = { tolerance: 1, maxAttempts: 2000 }
-) {
-  const tolerance = opts.tolerance ?? 1;
-  const maxAttempts = opts.maxAttempts ?? 2000;
+export function buildStateIndex() {
+  const distanceByRank = new Uint8Array(PERMUTATION_COUNT);
+  distanceByRank.fill(UNREACHABLE);
 
-  let fallback = null;
+  const solvedRank = rankBoard(SOLVED);
+  distanceByRank[solvedRank] = 0;
 
-  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
-    const board = randomWalkFromSolved(targetMoves * 3);
-    const optimal = optimalMoves(board);
+  const ranksByDistance = [[solvedRank]];
+  let queue = [SOLVED];
+  let depth = 0;
+  let reachableCount = 1;
 
-    if (optimal > 0) {
-      if (!fallback || Math.abs(optimal - targetMoves) < Math.abs(fallback.optimal - targetMoves)) {
-        fallback = { board, optimal };
-      }
+  while (queue.length > 0) {
+    const next = [];
 
-      if (optimal >= targetMoves - tolerance && optimal <= targetMoves + tolerance) {
-        return { board, optimal };
+    for (const board of queue) {
+      const blank = findBlank(board);
+
+      for (const n of getNeighbors(blank)) {
+        const nb = swap(board, blank, n);
+        const rank = rankBoard(nb);
+
+        if (distanceByRank[rank] !== UNREACHABLE) continue;
+
+        const nextDepth = depth + 1;
+        distanceByRank[rank] = nextDepth;
+
+        if (!ranksByDistance[nextDepth]) ranksByDistance[nextDepth] = [];
+        ranksByDistance[nextDepth].push(rank);
+
+        reachableCount += 1;
+        next.push(nb);
       }
     }
+
+    queue = next;
+    depth += 1;
   }
 
-  if (fallback) return fallback;
+  return {
+    distanceByRank,
+    ranksByDistance,
+    reachableCount,
+  };
+}
 
-  const safeBoard = randomWalkFromSolved(Math.max(6, targetMoves * 2));
-  return { board: safeBoard, optimal: Math.max(1, optimalMoves(safeBoard)) };
+export function getOptimalFromIndex(index, board) {
+  const rank = rankBoard(board);
+  const depth = index.distanceByRank[rank];
+  return depth === UNREACHABLE ? -1 : depth;
+}
+
+export function createPuzzleGenerator(index) {
+  return function generatePuzzle(targetMoves) {
+    const direct = index.ranksByDistance[targetMoves] || [];
+
+    if (direct.length > 0) {
+      const rank = direct[Math.floor(Math.random() * direct.length)];
+      return {
+        board: unrankBoard(rank),
+        optimal: targetMoves,
+      };
+    }
+
+    let bestDistance = -1;
+    for (let offset = 1; offset < index.ranksByDistance.length; offset += 1) {
+      const lower = targetMoves - offset;
+      if (lower >= 0 && (index.ranksByDistance[lower] || []).length > 0) {
+        bestDistance = lower;
+        break;
+      }
+
+      const upper = targetMoves + offset;
+      if ((index.ranksByDistance[upper] || []).length > 0) {
+        bestDistance = upper;
+        break;
+      }
+    }
+
+    if (bestDistance < 0) {
+      throw new Error(`No puzzle state found for targetMoves=${targetMoves}`);
+    }
+
+    const pool = index.ranksByDistance[bestDistance];
+    const rank = pool[Math.floor(Math.random() * pool.length)];
+
+    return {
+      board: unrankBoard(rank),
+      optimal: bestDistance,
+    };
+  };
 }
