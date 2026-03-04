@@ -1,4 +1,5 @@
 import { DIFFICULTIES, findBlank, getNeighbors } from "./puzzle.js";
+import { getDifficultyText, getMessage } from "./i18n.js";
 import { styles, applyStyles, withHoverStyle } from "./styles.js";
 
 function el(tag, style, text) {
@@ -18,12 +19,40 @@ function makeButton(label, style, action, disabled = false) {
   return button;
 }
 
-export function renderTitleScreen(container) {
+function createLocaleSwitch(locale) {
+  const switcher = el("div", styles.localeSwitch);
+  const options = [
+    { locale: "ja", key: "localeJa" },
+    { locale: "en", key: "localeEn" },
+  ];
+
+  for (const option of options) {
+    const active = locale === option.locale;
+    const button = el(
+      "button",
+      active ? { ...styles.localeButton, ...styles.localeButtonActive } : styles.localeButton,
+      getMessage(locale, option.key)
+    );
+    button.dataset.action = "set-locale";
+    button.dataset.locale = option.locale;
+    button.setAttribute("aria-pressed", active ? "true" : "false");
+    switcher.appendChild(button);
+  }
+
+  return switcher;
+}
+
+export function renderTitleScreen(container, state) {
+  const { locale } = state;
   const titleScreen = el("div", styles.titleScreen);
 
-  titleScreen.appendChild(el("div", styles.titleKanji, "詰"));
-  titleScreen.appendChild(el("h1", styles.titleMain, "詰め8パズル"));
-  titleScreen.appendChild(el("p", styles.titleSub, "最善手で解ければ正解"));
+  const topRow = el("div", styles.titleTopRow);
+  topRow.appendChild(createLocaleSwitch(locale));
+  titleScreen.appendChild(topRow);
+
+  titleScreen.appendChild(el("div", styles.titleKanji, getMessage(locale, "titleKanji")));
+  titleScreen.appendChild(el("h1", styles.titleMain, getMessage(locale, "titleMain")));
+  titleScreen.appendChild(el("p", styles.titleSub, getMessage(locale, "titleSub")));
 
   const diffGrid = el("div", styles.diffGrid);
   DIFFICULTIES.forEach((d) => {
@@ -37,14 +66,15 @@ export function renderTitleScreen(container) {
       { background: "transparent", color: "#2a2016" }
     );
 
-    const kanji = el("span", styles.diffKanji, d.kanji);
-    const label = el("span", styles.diffLabel, d.label);
-    button.append(kanji, label);
+    const diffText = getDifficultyText(locale, d.id);
+    const badge = el("span", styles.diffKanji, diffText.badge);
+    const label = el("span", styles.diffLabel, diffText.label);
+    button.append(badge, label);
     diffGrid.appendChild(button);
   });
 
   const ruleText = el("p", styles.ruleText);
-  ruleText.innerHTML = "タイルをスライドして1〜8を順に並べよ。<br>最少手数で完成すれば「正解」。";
+  ruleText.innerHTML = getMessage(locale, "ruleText");
 
   titleScreen.append(diffGrid, ruleText);
   container.appendChild(titleScreen);
@@ -79,9 +109,9 @@ function createBoard(state) {
   return board;
 }
 
-function createGoalSection() {
+function createGoalSection(locale) {
   const goalSection = el("div", styles.goalSection);
-  goalSection.appendChild(el("div", styles.goalLabel, "完成図"));
+  goalSection.appendChild(el("div", styles.goalLabel, getMessage(locale, "goalLabel")));
 
   const goalGrid = el("div", styles.goalGrid);
   [1, 2, 3, 4, 5, 6, 7, 8, 0].forEach((value) => {
@@ -96,26 +126,40 @@ function createGoalSection() {
 function createResultOverlay(state) {
   if (!state.result) return null;
 
+  const { locale } = state;
   const overlay = el("div", styles.resultOverlay);
   const resultCard = el("div", styles.resultCard);
   resultCard.style.borderColor = state.result === "correct" ? "#4a7c59" : "#8c4a4a";
 
   if (state.result === "correct") {
-    resultCard.appendChild(el("div", styles.resultKanji, "正解"));
-    resultCard.appendChild(el("p", styles.resultText, `${state.puzzle.optimal}手で解きました`));
+    resultCard.appendChild(el("div", styles.resultKanji, getMessage(locale, "resultCorrect")));
+    resultCard.appendChild(
+      el("p", styles.resultText, getMessage(locale, "resultCorrectText", { optimal: state.puzzle.optimal }))
+    );
   } else {
-    const wrong = el("div", { ...styles.resultKanji, color: "#8c4a4a" }, "不正解");
+    const wrong = el(
+      "div",
+      { ...styles.resultKanji, color: "#8c4a4a", fontSize: locale === "en" ? "44px" : styles.resultKanji.fontSize },
+      getMessage(locale, "resultWrong")
+    );
     resultCard.appendChild(wrong);
     resultCard.appendChild(
-      el("p", styles.resultText, `${state.moveCount}手（最善：${state.puzzle.optimal}手）`)
+      el(
+        "p",
+        styles.resultText,
+        getMessage(locale, "resultWrongText", {
+          move: state.moveCount,
+          optimal: state.puzzle.optimal,
+        })
+      )
     );
   }
 
   const resultButtons = el("div", styles.resultButtons);
   if (state.result === "wrong") {
-    resultButtons.appendChild(makeButton("再挑戦", styles.resultBtn, "reset"));
+    resultButtons.appendChild(makeButton(getMessage(locale, "retry"), styles.resultBtn, "reset"));
   }
-  resultButtons.appendChild(makeButton("次の問題", styles.resultBtn, "next"));
+  resultButtons.appendChild(makeButton(getMessage(locale, "next"), styles.resultBtn, "next"));
 
   resultCard.appendChild(resultButtons);
   overlay.appendChild(resultCard);
@@ -123,47 +167,47 @@ function createResultOverlay(state) {
 }
 
 export function renderGameScreen(container, state) {
+  const { locale } = state;
   const gameScreen = el("div", styles.gameScreen);
 
   const header = el("div", styles.header);
-  header.appendChild(makeButton("← 戻る", styles.backButton, "back"));
+  header.appendChild(makeButton(getMessage(locale, "back"), styles.backButton, "back"));
 
   const headerCenter = el("div", styles.headerCenter);
+  const diffText = getDifficultyText(locale, state.difficulty.id);
+  headerCenter.appendChild(el("span", styles.headerDiff, diffText.label));
   headerCenter.appendChild(
-    el("span", styles.headerDiff, `${state.difficulty.kanji}・${state.difficulty.label}`)
+    el("span", styles.headerNum, getMessage(locale, "puzzleNumber", { n: state.puzzleNumber }))
   );
-  headerCenter.appendChild(el("span", styles.headerNum, `第${state.puzzleNumber}問`));
   header.appendChild(headerCenter);
 
-  const headerRight = el("div");
-  headerRight.appendChild(
-    el(
-      "span",
-      styles.moveLabel,
-      `${state.moveCount}手${state.puzzle ? `／${state.puzzle.optimal}手` : ""}`
-    )
-  );
+  const headerRight = el("div", styles.headerRight);
+  const moveText = state.puzzle
+    ? getMessage(locale, "moveLabel", { move: state.moveCount, optimal: state.puzzle.optimal })
+    : getMessage(locale, "moveLabelNoPuzzle", { move: state.moveCount });
+  headerRight.appendChild(el("span", styles.moveLabel, moveText));
+  headerRight.appendChild(createLocaleSwitch(locale));
   header.appendChild(headerRight);
   gameScreen.appendChild(header);
 
   const boardWrapper = el("div", styles.boardWrapper);
   boardWrapper.appendChild(createBoard(state));
-  boardWrapper.appendChild(createGoalSection());
+  boardWrapper.appendChild(createGoalSection(locale));
   gameScreen.appendChild(boardWrapper);
 
   const controls = el("div", styles.controls);
   controls.appendChild(
-    makeButton("一手戻す", styles.controlBtn, "undo", state.history.length <= 1 || !!state.result)
+    makeButton(getMessage(locale, "undo"), styles.controlBtn, "undo", state.history.length <= 1 || !!state.result)
   );
   controls.appendChild(
-    makeButton("最初から", styles.controlBtn, "reset", state.moveCount === 0 || !!state.result)
+    makeButton(getMessage(locale, "reset"), styles.controlBtn, "reset", state.moveCount === 0 || !!state.result)
   );
   gameScreen.appendChild(controls);
 
   const overlay = createResultOverlay(state);
   if (overlay) gameScreen.appendChild(overlay);
 
-  gameScreen.appendChild(el("p", styles.hint, "矢印キー操作可・Ctrl+Zで一手戻す"));
+  gameScreen.appendChild(el("p", styles.hint, getMessage(locale, "hint")));
   container.appendChild(gameScreen);
 }
 

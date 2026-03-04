@@ -7,6 +7,7 @@ import {
   isSolved,
   swap,
 } from "./puzzle.js";
+import { getMessage, resolveLocale } from "./i18n.js";
 import { renderApp } from "./ui.js";
 
 const root = document.getElementById("app");
@@ -19,6 +20,7 @@ const puzzleIndex = buildStateIndex();
 const generatePuzzle = createPuzzleGenerator(puzzleIndex);
 
 const state = {
+  locale: resolveLocale(navigator.language),
   difficulty: null,
   puzzle: null,
   board: null,
@@ -32,6 +34,8 @@ const state = {
 let animTimer = null;
 
 function update() {
+  document.documentElement.lang = state.locale;
+  document.title = getMessage(state.locale, "pageTitle");
   renderApp(root, state);
 }
 
@@ -197,6 +201,15 @@ function handleActionClick(event) {
 
   if (action === "back") {
     handleBack();
+    return;
+  }
+
+  if (action === "set-locale") {
+    const locale = resolveLocale(button.dataset.locale);
+    if (locale !== state.locale) {
+      state.locale = locale;
+      update();
+    }
   }
 }
 

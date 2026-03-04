@@ -16,6 +16,11 @@ export const styles = {
     textAlign: "center",
     maxWidth: "420px",
   },
+  titleTopRow: {
+    display: "flex",
+    justifyContent: "flex-end",
+    marginBottom: "10px",
+  },
   titleKanji: {
     fontSize: "96px",
     fontWeight: "900",
@@ -104,10 +109,37 @@ export const styles = {
     fontSize: "12px",
     color: "#7a6b52",
   },
+  headerRight: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "flex-end",
+    gap: "8px",
+  },
   moveLabel: {
     fontSize: "16px",
     fontWeight: "600",
     fontVariantNumeric: "tabular-nums",
+  },
+  localeSwitch: {
+    display: "inline-flex",
+    border: "1px solid #7a6b52",
+    borderRadius: "999px",
+    overflow: "hidden",
+    background: "#efe4c8",
+  },
+  localeButton: {
+    background: "transparent",
+    border: "none",
+    color: "#6d5f49",
+    padding: "5px 10px",
+    fontFamily: "inherit",
+    fontSize: "12px",
+    cursor: "pointer",
+    lineHeight: "1.1",
+  },
+  localeButtonActive: {
+    background: "#2a2016",
+    color: "#e8d5b5",
   },
   boardWrapper: {
     display: "flex",
