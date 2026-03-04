@@ -25,3 +25,8 @@ test("getDifficultyText returns localized difficulty labels", () => {
   assert.deepEqual(getDifficultyText("ja", "hard"), { badge: "上", label: "十五手" });
   assert.deepEqual(getDifficultyText("en", "hard"), { badge: "H", label: "15 moves" });
 });
+
+test("solveOne message exists for both locales", () => {
+  assert.equal(getMessage("ja", "solveOne"), "解答");
+  assert.equal(getMessage("en", "solveOne"), "Hint Move");
+});

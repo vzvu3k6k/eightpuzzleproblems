@@ -4,6 +4,7 @@ import {
   createPuzzleGenerator,
   findBlank,
   getNeighbors,
+  rankBoard,
   isSolved,
   swap,
 } from "./puzzle.js";
@@ -107,6 +108,28 @@ function handleUndo() {
   update();
 }
 
+function handleSolveOne() {
+  if (state.result || !state.board) return;
+
+  const currentRank = rankBoard(state.board);
+  const currentDistance = puzzleIndex.distanceByRank[currentRank];
+  if (!Number.isInteger(currentDistance) || currentDistance <= 0) return;
+
+  const blank = findBlank(state.board);
+  const neighbors = getNeighbors(blank);
+
+  for (const idx of neighbors) {
+    const nextBoard = swap(state.board, blank, idx);
+    const nextRank = rankBoard(nextBoard);
+    const nextDistance = puzzleIndex.distanceByRank[nextRank];
+
+    if (nextDistance === currentDistance - 1) {
+      handleTileClick(idx);
+      return;
+    }
+  }
+}
+
 function handleReset() {
   if (!state.puzzle) return;
 
@@ -186,6 +209,11 @@ function handleActionClick(event) {
 
   if (action === "undo") {
     handleUndo();
+    return;
+  }
+
+  if (action === "solve-one") {
+    handleSolveOne();
     return;
   }
 

@@ -87,3 +87,22 @@ test("random difficulty range stays within configured bounds", () => {
     assert.equal(getOptimalFromIndex(index, puzzle.board), puzzle.optimal);
   }
 });
+
+test("every non-solved reachable board has a neighbor one step closer", () => {
+  const index = buildStateIndex();
+
+  for (let rank = 0; rank < index.distanceByRank.length; rank += 1) {
+    const depth = index.distanceByRank[rank];
+    if (depth === 255 || depth === 0) continue;
+
+    const board = unrankBoard(rank);
+    const blank = findBlank(board);
+    const hasCloserNeighbor = getNeighbors(blank).some((n) => {
+      const neighborBoard = swap(board, blank, n);
+      const neighborRank = rankBoard(neighborBoard);
+      return index.distanceByRank[neighborRank] === depth - 1;
+    });
+
+    assert.equal(hasCloserNeighbor, true);
+  }
+});

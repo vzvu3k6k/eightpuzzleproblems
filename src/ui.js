@@ -200,6 +200,9 @@ export function renderGameScreen(container, state) {
     makeButton(getMessage(locale, "undo"), styles.controlBtn, "undo", state.history.length <= 1 || !!state.result)
   );
   controls.appendChild(
+    makeButton(getMessage(locale, "solveOne"), styles.controlBtn, "solve-one", !state.board || !!state.result)
+  );
+  controls.appendChild(
     makeButton(getMessage(locale, "reset"), styles.controlBtn, "reset", state.moveCount === 0 || !!state.result)
   );
   gameScreen.appendChild(controls);
