@@ -1,0 +1,271 @@
+export const styles = {
+  container: {
+    minHeight: "100vh",
+    background: "#f5edd6",
+    backgroundImage:
+      "repeating-linear-gradient(0deg, transparent, transparent 39px, #e8dcc3 39px, #e8dcc3 40px), repeating-linear-gradient(90deg, transparent, transparent 39px, #e8dcc3 39px, #e8dcc3 40px)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    fontFamily: "'Noto Serif JP', 'Hiragino Mincho ProN', 'Yu Mincho', serif",
+    color: "#2a2016",
+    padding: "20px",
+    boxSizing: "border-box",
+  },
+  titleScreen: {
+    textAlign: "center",
+    maxWidth: "420px",
+  },
+  titleKanji: {
+    fontSize: "96px",
+    fontWeight: "900",
+    lineHeight: "1",
+    color: "#2a2016",
+    textShadow: "3px 3px 0 #d4c4a0",
+    marginBottom: "8px",
+  },
+  titleMain: {
+    fontSize: "32px",
+    fontWeight: "700",
+    margin: "0 0 4px",
+    letterSpacing: "8px",
+  },
+  titleSub: {
+    fontSize: "14px",
+    color: "#7a6b52",
+    margin: "0 0 36px",
+    letterSpacing: "4px",
+  },
+  diffGrid: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: "12px",
+    marginBottom: "32px",
+  },
+  diffButton: {
+    background: "transparent",
+    border: "2px solid #2a2016",
+    color: "#2a2016",
+    padding: "16px 12px",
+    cursor: "pointer",
+    fontFamily: "inherit",
+    fontSize: "16px",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: "4px",
+    transition: "all 0.2s",
+  },
+  diffKanji: {
+    fontSize: "28px",
+    fontWeight: "700",
+  },
+  diffLabel: {
+    fontSize: "13px",
+    letterSpacing: "2px",
+  },
+  ruleText: {
+    fontSize: "13px",
+    lineHeight: "1.8",
+    color: "#7a6b52",
+  },
+  gameScreen: {
+    width: "100%",
+    maxWidth: "520px",
+    position: "relative",
+  },
+  header: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: "24px",
+    gap: "12px",
+  },
+  backButton: {
+    background: "none",
+    border: "none",
+    fontFamily: "inherit",
+    fontSize: "14px",
+    color: "#7a6b52",
+    cursor: "pointer",
+    padding: "4px 0",
+  },
+  headerCenter: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+  },
+  headerDiff: {
+    fontSize: "18px",
+    fontWeight: "700",
+    letterSpacing: "4px",
+  },
+  headerNum: {
+    fontSize: "12px",
+    color: "#7a6b52",
+  },
+  moveLabel: {
+    fontSize: "16px",
+    fontWeight: "600",
+    fontVariantNumeric: "tabular-nums",
+  },
+  boardWrapper: {
+    display: "flex",
+    alignItems: "flex-start",
+    justifyContent: "center",
+    gap: "24px",
+    marginBottom: "20px",
+    flexWrap: "wrap",
+  },
+  board: {
+    display: "grid",
+    gridTemplateColumns: "repeat(3, 1fr)",
+    gap: "4px",
+    background: "#2a2016",
+    padding: "4px",
+    borderRadius: "2px",
+    width: "264px",
+    height: "264px",
+    flexShrink: "0",
+  },
+  emptyCell: {
+    background: "#3d3225",
+    borderRadius: "1px",
+  },
+  tile: {
+    background: "#e8d5b5",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: "1px",
+    transition: "all 0.12s ease",
+    userSelect: "none",
+    WebkitUserSelect: "none",
+  },
+  tileMovable: {
+    background: "#f0e4c8",
+    boxShadow: "inset 0 0 0 2px #b89e6e",
+  },
+  tileAnimating: {
+    transform: "scale(0.93)",
+  },
+  tileNumber: {
+    fontSize: "32px",
+    fontWeight: "700",
+    color: "#2a2016",
+  },
+  goalSection: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: "8px",
+  },
+  goalLabel: {
+    fontSize: "11px",
+    color: "#7a6b52",
+    letterSpacing: "2px",
+  },
+  goalGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(3, 1fr)",
+    gap: "2px",
+    background: "#c4b89a",
+    padding: "2px",
+    borderRadius: "2px",
+    width: "84px",
+    height: "84px",
+  },
+  goalTile: {
+    background: "#e8d5b5",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "13px",
+    fontWeight: "600",
+    color: "#5a4d3a",
+    borderRadius: "1px",
+  },
+  goalEmpty: {
+    background: "#b8ab8e",
+    borderRadius: "1px",
+  },
+  controls: {
+    display: "flex",
+    justifyContent: "center",
+    gap: "12px",
+    marginBottom: "16px",
+  },
+  controlBtn: {
+    background: "none",
+    border: "1.5px solid #7a6b52",
+    color: "#7a6b52",
+    padding: "8px 20px",
+    fontFamily: "inherit",
+    fontSize: "13px",
+    cursor: "pointer",
+    transition: "opacity 0.2s",
+    letterSpacing: "1px",
+  },
+  resultOverlay: {
+    position: "absolute",
+    inset: "0",
+    background: "rgba(245, 237, 214, 0.85)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: "10",
+    backdropFilter: "blur(2px)",
+  },
+  resultCard: {
+    background: "#f5edd6",
+    border: "3px solid",
+    padding: "36px 48px",
+    textAlign: "center",
+  },
+  resultKanji: {
+    fontSize: "56px",
+    fontWeight: "900",
+    color: "#4a7c59",
+    lineHeight: "1",
+    marginBottom: "8px",
+  },
+  resultText: {
+    fontSize: "15px",
+    color: "#5a4d3a",
+    margin: "0 0 24px",
+  },
+  resultButtons: {
+    display: "flex",
+    gap: "12px",
+    justifyContent: "center",
+  },
+  resultBtn: {
+    background: "#2a2016",
+    color: "#e8d5b5",
+    border: "none",
+    padding: "10px 24px",
+    fontFamily: "inherit",
+    fontSize: "14px",
+    cursor: "pointer",
+    letterSpacing: "2px",
+  },
+  hint: {
+    textAlign: "center",
+    fontSize: "11px",
+    color: "#a89b80",
+    margin: "0",
+  },
+};
+
+export function applyStyles(element, styleObject) {
+  Object.assign(element.style, styleObject);
+}
+
+export function withHoverStyle(element, hoverStyle, baseStyle) {
+  element.addEventListener("mouseenter", () => {
+    Object.assign(element.style, hoverStyle);
+  });
+  element.addEventListener("mouseleave", () => {
+    Object.assign(element.style, baseStyle);
+  });
+}
