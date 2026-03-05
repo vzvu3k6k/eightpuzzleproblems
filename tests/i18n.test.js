@@ -23,7 +23,7 @@ test("getMessage formats template placeholders", () => {
 
 test("getDifficultyText returns localized difficulty labels", () => {
   assert.deepEqual(getDifficultyText("ja", "hard"), { badge: "上", label: "十五手" });
-  assert.deepEqual(getDifficultyText("en", "hard"), { badge: "H", label: "15 moves" });
+  assert.deepEqual(getDifficultyText("en", "hard"), { badge: "High", label: "15 moves" });
 });
 
 test("solveOne message exists for both locales", () => {
