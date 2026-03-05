@@ -1,6 +1,7 @@
 import { DIFFICULTIES, findBlank, getNeighbors } from "./puzzle.js";
 import { getDifficultyText, getMessage } from "./i18n.js";
 import { styles, applyStyles, withHoverStyle } from "./styles.js";
+import { Actions } from "./actions.js";
 
 function el(tag, style, text) {
   const node = document.createElement(tag);
@@ -33,7 +34,7 @@ function createLocaleSwitch(locale) {
       active ? { ...styles.localeButton, ...styles.localeButtonActive } : styles.localeButton,
       getMessage(locale, option.key)
     );
-    button.dataset.action = "set-locale";
+    button.dataset.action = Actions.SET_LOCALE;
     button.dataset.locale = option.locale;
     button.setAttribute("aria-pressed", active ? "true" : "false");
     switcher.appendChild(button);
@@ -57,7 +58,7 @@ export function renderTitleScreen(container, state) {
   const diffGrid = el("div", styles.diffGrid);
   DIFFICULTIES.forEach((d) => {
     const button = el("button", styles.diffButton);
-    button.dataset.action = "start";
+    button.dataset.action = Actions.START;
     button.dataset.difficultyId = d.id;
 
     withHoverStyle(
@@ -99,7 +100,7 @@ function createBoard(state) {
     if (isAnimating) applyStyles(tileNode, styles.tileAnimating);
 
     tileNode.style.cursor = movable ? "pointer" : "default";
-    tileNode.dataset.action = "tile";
+    tileNode.dataset.action = Actions.TILE;
     tileNode.dataset.idx = String(idx);
 
     tileNode.appendChild(el("span", styles.tileNumber, String(tile)));
@@ -157,9 +158,9 @@ function createResultOverlay(state) {
 
   const resultButtons = el("div", styles.resultButtons);
   if (state.result === "wrong" || state.usedSolveOne) {
-    resultButtons.appendChild(makeButton(getMessage(locale, "retry"), styles.resultBtn, "reset"));
+    resultButtons.appendChild(makeButton(getMessage(locale, "retry"), styles.resultBtn, Actions.RESET));
   }
-  resultButtons.appendChild(makeButton(getMessage(locale, "next"), styles.resultBtn, "next"));
+  resultButtons.appendChild(makeButton(getMessage(locale, "next"), styles.resultBtn, Actions.NEXT));
 
   resultCard.appendChild(resultButtons);
   overlay.appendChild(resultCard);
@@ -171,7 +172,7 @@ export function renderGameScreen(container, state) {
   const gameScreen = el("div", styles.gameScreen);
 
   const header = el("div", styles.header);
-  header.appendChild(makeButton(getMessage(locale, "back"), styles.backButton, "back"));
+  header.appendChild(makeButton(getMessage(locale, "back"), styles.backButton, Actions.BACK));
 
   const headerCenter = el("div", styles.headerCenter);
   const diffText = getDifficultyText(locale, state.difficulty.id);
@@ -197,13 +198,18 @@ export function renderGameScreen(container, state) {
 
   const controls = el("div", styles.controls);
   controls.appendChild(
-    makeButton(getMessage(locale, "undo"), styles.controlBtn, "undo", state.history.length <= 1 || !!state.result)
+    makeButton(
+      getMessage(locale, "undo"),
+      styles.controlBtn,
+      Actions.UNDO,
+      state.history.length <= 1 || !!state.result
+    )
   );
   controls.appendChild(
-    makeButton(getMessage(locale, "solveOne"), styles.controlBtn, "solve-one", !state.board || !!state.result)
+    makeButton(getMessage(locale, "solveOne"), styles.controlBtn, Actions.SOLVE_ONE, !state.board || !!state.result)
   );
   controls.appendChild(
-    makeButton(getMessage(locale, "reset"), styles.controlBtn, "reset", state.moveCount === 0 || !!state.result)
+    makeButton(getMessage(locale, "reset"), styles.controlBtn, Actions.RESET, state.moveCount === 0 || !!state.result)
   );
   gameScreen.appendChild(controls);
 

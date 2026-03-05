@@ -10,6 +10,7 @@ import {
 } from "./puzzle.js";
 import { getMessage, resolveLocale } from "./i18n.js";
 import { renderApp } from "./ui.js";
+import { Actions } from "./actions.js";
 
 const root = document.getElementById("app");
 
@@ -194,56 +195,46 @@ function parseDifficulty(value) {
   return DIFFICULTIES.find((d) => d.id === value) || null;
 }
 
+const actionHandlers = {
+  [Actions.START]: (el) => {
+    const diff = parseDifficulty(el.dataset.difficultyId);
+    if (diff) startPuzzle(diff);
+  },
+  [Actions.TILE]: (el) => {
+    const idx = Number(el.dataset.idx);
+    if (Number.isInteger(idx)) handleTileClick(idx);
+  },
+  [Actions.UNDO]: () => {
+    handleUndo();
+  },
+  [Actions.SOLVE_ONE]: () => {
+    handleSolveOne();
+  },
+  [Actions.RESET]: () => {
+    handleReset();
+  },
+  [Actions.NEXT]: () => {
+    handleNext();
+  },
+  [Actions.BACK]: () => {
+    handleBack();
+  },
+  [Actions.SET_LOCALE]: (el) => {
+    const locale = resolveLocale(el.dataset.locale);
+    if (locale !== state.locale) {
+      state.locale = locale;
+      update();
+    }
+  },
+};
+
 function handleActionClick(event) {
   const button = event.target.closest("[data-action]");
   if (!button) return;
 
   const action = button.dataset.action;
-
-  if (action === "start") {
-    const diff = parseDifficulty(button.dataset.difficultyId);
-    if (diff) startPuzzle(diff);
-    return;
-  }
-
-  if (action === "tile") {
-    const idx = Number(button.dataset.idx);
-    if (Number.isInteger(idx)) handleTileClick(idx);
-    return;
-  }
-
-  if (action === "undo") {
-    handleUndo();
-    return;
-  }
-
-  if (action === "solve-one") {
-    handleSolveOne();
-    return;
-  }
-
-  if (action === "reset") {
-    handleReset();
-    return;
-  }
-
-  if (action === "next") {
-    handleNext();
-    return;
-  }
-
-  if (action === "back") {
-    handleBack();
-    return;
-  }
-
-  if (action === "set-locale") {
-    const locale = resolveLocale(button.dataset.locale);
-    if (locale !== state.locale) {
-      state.locale = locale;
-      update();
-    }
-  }
+  const handler = actionHandlers[action];
+  if (handler) handler(button);
 }
 
 root.addEventListener("click", handleActionClick);
