@@ -199,8 +199,7 @@ function GameScreen({ state }) {
     h(
       "div",
       { style: styles.headerRight },
-      h("span", { style: styles.moveLabel }, moveText),
-      LocaleSwitch({ locale })
+      h("span", { style: styles.moveLabel }, moveText)
     )
   );
 
@@ -248,4 +247,3 @@ export function renderApp(root, state) {
     )
   );
 }
-
