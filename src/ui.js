@@ -1,234 +1,251 @@
 import { DIFFICULTIES, findBlank, getNeighbors } from "./puzzle.js";
 import { getDifficultyText, getMessage } from "./i18n.js";
-import { styles, applyStyles, withHoverStyle } from "./styles.js";
+import { styles, withHoverStyle } from "./styles.js";
 import { Actions } from "./actions.js";
+import { h } from "./dom.js";
 
-function el(tag, style, text) {
-  const node = document.createElement(tag);
-  if (style) applyStyles(node, style);
-  if (text !== undefined) node.textContent = text;
-  return node;
+function ActionButton({ label, style, action, disabled = false, dataset, attrs }) {
+  const mergedStyle = disabled ? { ...(style ?? {}), opacity: "0.4" } : style;
+  return h(
+    "button",
+    {
+      style: mergedStyle,
+      disabled,
+      dataset: { action, ...(dataset ?? {}) },
+      attrs,
+    },
+    label
+  );
 }
 
-function makeButton(label, style, action, disabled = false) {
-  const button = el("button", style, label);
-  button.dataset.action = action;
-  if (disabled) {
-    button.disabled = true;
-    button.style.opacity = "0.4";
-  }
-  return button;
-}
-
-function createLocaleSwitch(locale) {
-  const switcher = el("div", styles.localeSwitch);
+function LocaleSwitch({ locale }) {
   const options = [
     { locale: "ja", key: "localeJa" },
     { locale: "en", key: "localeEn" },
   ];
 
-  for (const option of options) {
-    const active = locale === option.locale;
-    const button = el(
-      "button",
-      active ? { ...styles.localeButton, ...styles.localeButtonActive } : styles.localeButton,
-      getMessage(locale, option.key)
-    );
-    button.dataset.action = Actions.SET_LOCALE;
-    button.dataset.locale = option.locale;
-    button.setAttribute("aria-pressed", active ? "true" : "false");
-    switcher.appendChild(button);
-  }
-
-  return switcher;
+  return h(
+    "div",
+    { style: styles.localeSwitch },
+    options.map((option) => {
+      const active = locale === option.locale;
+      return ActionButton({
+        label: getMessage(locale, option.key),
+        style: active ? { ...styles.localeButton, ...styles.localeButtonActive } : styles.localeButton,
+        action: Actions.SET_LOCALE,
+        dataset: { locale: option.locale },
+        attrs: { "aria-pressed": active ? "true" : "false" },
+      });
+    })
+  );
 }
 
-export function renderTitleScreen(container, state) {
+function DifficultyButton({ locale, difficulty }) {
+  const diffText = getDifficultyText(locale, difficulty.id);
+  const button = h(
+    "button",
+    {
+      style: styles.diffButton,
+      dataset: { action: Actions.START, difficultyId: difficulty.id },
+    },
+    h("span", { style: styles.diffKanji }, diffText.badge),
+    h("span", { style: styles.diffLabel }, diffText.label)
+  );
+
+  withHoverStyle(
+    button,
+    { background: "#2a2016", color: "#e8d5b5" },
+    { background: "transparent", color: "#2a2016" }
+  );
+
+  return button;
+}
+
+function TitleScreen({ state }) {
   const { locale } = state;
-  const titleScreen = el("div", styles.titleScreen);
 
-  const topRow = el("div", styles.titleTopRow);
-  topRow.appendChild(createLocaleSwitch(locale));
-  titleScreen.appendChild(topRow);
-
-  titleScreen.appendChild(el("div", styles.titleKanji, getMessage(locale, "titleKanji")));
-  titleScreen.appendChild(el("h1", styles.titleMain, getMessage(locale, "titleMain")));
-  titleScreen.appendChild(el("p", styles.titleSub, getMessage(locale, "titleSub")));
-
-  const diffGrid = el("div", styles.diffGrid);
-  DIFFICULTIES.forEach((d) => {
-    const button = el("button", styles.diffButton);
-    button.dataset.action = Actions.START;
-    button.dataset.difficultyId = d.id;
-
-    withHoverStyle(
-      button,
-      { background: "#2a2016", color: "#e8d5b5" },
-      { background: "transparent", color: "#2a2016" }
-    );
-
-    const diffText = getDifficultyText(locale, d.id);
-    const badge = el("span", styles.diffKanji, diffText.badge);
-    const label = el("span", styles.diffLabel, diffText.label);
-    button.append(badge, label);
-    diffGrid.appendChild(button);
-  });
-
-  const ruleText = el("p", styles.ruleText);
-  ruleText.innerHTML = getMessage(locale, "ruleText");
-
-  titleScreen.append(diffGrid, ruleText);
-  container.appendChild(titleScreen);
+  return h(
+    "div",
+    { style: styles.titleScreen },
+    h("div", { style: styles.titleTopRow }, LocaleSwitch({ locale })),
+    h("div", { style: styles.titleKanji }, getMessage(locale, "titleKanji")),
+    h("h1", { style: styles.titleMain }, getMessage(locale, "titleMain")),
+    h("p", { style: styles.titleSub }, getMessage(locale, "titleSub")),
+    h(
+      "div",
+      { style: styles.diffGrid },
+      DIFFICULTIES.map((d) => DifficultyButton({ locale, difficulty: d }))
+    ),
+    // i18n message includes <br>
+    h("p", { style: styles.ruleText, html: getMessage(locale, "ruleText") })
+  );
 }
 
-function createBoard(state) {
-  const board = el("div", styles.board);
+function Board({ state }) {
+  if (!state.board) return h("div", { style: styles.board });
 
   const blank = findBlank(state.board);
+  const movableNeighbors = new Set(getNeighbors(blank));
 
-  state.board.forEach((tile, idx) => {
-    if (tile === 0) {
-      board.appendChild(el("div", styles.emptyCell));
-      return;
-    }
+  return h(
+    "div",
+    { style: styles.board },
+    state.board.map((tile, idx) => {
+      if (tile === 0) return h("div", { style: styles.emptyCell });
 
-    const movable = !state.result && getNeighbors(blank).includes(idx);
-    const isAnimating = state.animatingTile === idx;
+      const movable = !state.result && movableNeighbors.has(idx);
+      const isAnimating = state.animatingTile === idx;
+      const tileStyle = {
+        ...styles.tile,
+        ...(movable ? styles.tileMovable : {}),
+        ...(isAnimating ? styles.tileAnimating : {}),
+        cursor: movable ? "pointer" : "default",
+      };
 
-    const tileNode = el("div", styles.tile);
-    if (movable) applyStyles(tileNode, styles.tileMovable);
-    if (isAnimating) applyStyles(tileNode, styles.tileAnimating);
-
-    tileNode.style.cursor = movable ? "pointer" : "default";
-    tileNode.dataset.action = Actions.TILE;
-    tileNode.dataset.idx = String(idx);
-
-    tileNode.appendChild(el("span", styles.tileNumber, String(tile)));
-    board.appendChild(tileNode);
-  });
-
-  return board;
+      return h(
+        "div",
+        {
+          style: tileStyle,
+          dataset: { action: Actions.TILE, idx },
+        },
+        h("span", { style: styles.tileNumber }, String(tile))
+      );
+    })
+  );
 }
 
-function createGoalSection(locale) {
-  const goalSection = el("div", styles.goalSection);
-  goalSection.appendChild(el("div", styles.goalLabel, getMessage(locale, "goalLabel")));
-
-  const goalGrid = el("div", styles.goalGrid);
-  [1, 2, 3, 4, 5, 6, 7, 8, 0].forEach((value) => {
-    const cell = value === 0 ? el("div", styles.goalEmpty) : el("div", styles.goalTile, String(value));
-    goalGrid.appendChild(cell);
-  });
-
-  goalSection.appendChild(goalGrid);
-  return goalSection;
+function GoalSection({ locale }) {
+  return h(
+    "div",
+    { style: styles.goalSection },
+    h("div", { style: styles.goalLabel }, getMessage(locale, "goalLabel")),
+    h(
+      "div",
+      { style: styles.goalGrid },
+      [1, 2, 3, 4, 5, 6, 7, 8, 0].map((value) =>
+        value === 0 ? h("div", { style: styles.goalEmpty }) : h("div", { style: styles.goalTile }, String(value))
+      )
+    )
+  );
 }
 
-function createResultOverlay(state) {
+function ResultOverlay({ state }) {
   if (!state.result) return null;
 
   const { locale } = state;
-  const overlay = el("div", styles.resultOverlay);
-  const resultCard = el("div", styles.resultCard);
-  resultCard.style.borderColor = state.result === "correct" ? "#4a7c59" : "#8c4a4a";
+  const resultCardStyle = {
+    ...styles.resultCard,
+    borderColor: state.result === "correct" ? "#4a7c59" : "#8c4a4a",
+  };
 
-  if (state.result === "correct") {
-    resultCard.appendChild(el("div", styles.resultKanji, getMessage(locale, "resultCorrect")));
-    resultCard.appendChild(
-      el("p", styles.resultText, getMessage(locale, "resultCorrectText", { optimal: state.puzzle.optimal }))
-    );
-  } else {
-    const wrong = el(
-      "div",
-      { ...styles.resultKanji, color: "#8c4a4a", fontSize: locale === "en" ? "44px" : styles.resultKanji.fontSize },
-      getMessage(locale, "resultWrong")
-    );
-    resultCard.appendChild(wrong);
-    resultCard.appendChild(
-      el(
-        "p",
-        styles.resultText,
-        getMessage(locale, "resultWrongText", {
-          move: state.moveCount,
-          optimal: state.puzzle.optimal,
-        })
-      )
-    );
-  }
+  const body =
+    state.result === "correct"
+      ? [
+          h("div", { style: styles.resultKanji }, getMessage(locale, "resultCorrect")),
+          h("p", { style: styles.resultText }, getMessage(locale, "resultCorrectText", { optimal: state.puzzle.optimal })),
+        ]
+      : [
+          h(
+            "div",
+            {
+              style: {
+                ...styles.resultKanji,
+                color: "#8c4a4a",
+                fontSize: locale === "en" ? "44px" : styles.resultKanji.fontSize,
+              },
+            },
+            getMessage(locale, "resultWrong")
+          ),
+          h(
+            "p",
+            { style: styles.resultText },
+            getMessage(locale, "resultWrongText", { move: state.moveCount, optimal: state.puzzle.optimal })
+          ),
+        ];
 
-  const resultButtons = el("div", styles.resultButtons);
-  if (state.result === "wrong" || state.usedSolveOne) {
-    resultButtons.appendChild(makeButton(getMessage(locale, "retry"), styles.resultBtn, Actions.RESET));
-  }
-  resultButtons.appendChild(makeButton(getMessage(locale, "next"), styles.resultBtn, Actions.NEXT));
+  const buttons = h(
+    "div",
+    { style: styles.resultButtons },
+    state.result === "wrong" || state.usedSolveOne
+      ? ActionButton({ label: getMessage(locale, "retry"), style: styles.resultBtn, action: Actions.RESET })
+      : null,
+    ActionButton({ label: getMessage(locale, "next"), style: styles.resultBtn, action: Actions.NEXT })
+  );
 
-  resultCard.appendChild(resultButtons);
-  overlay.appendChild(resultCard);
-  return overlay;
+  return h(
+    "div",
+    { style: styles.resultOverlay },
+    h("div", { style: resultCardStyle }, body, buttons)
+  );
 }
 
-export function renderGameScreen(container, state) {
+function GameScreen({ state }) {
   const { locale } = state;
-  const gameScreen = el("div", styles.gameScreen);
-
-  const header = el("div", styles.header);
-  header.appendChild(makeButton(getMessage(locale, "back"), styles.backButton, Actions.BACK));
-
-  const headerCenter = el("div", styles.headerCenter);
   const diffText = getDifficultyText(locale, state.difficulty.id);
-  headerCenter.appendChild(el("span", styles.headerDiff, diffText.label));
-  headerCenter.appendChild(
-    el("span", styles.headerNum, getMessage(locale, "puzzleNumber", { n: state.puzzleNumber }))
-  );
-  header.appendChild(headerCenter);
-
-  const headerRight = el("div", styles.headerRight);
   const moveText = state.puzzle
     ? getMessage(locale, "moveLabel", { move: state.moveCount, optimal: state.puzzle.optimal })
     : getMessage(locale, "moveLabelNoPuzzle", { move: state.moveCount });
-  headerRight.appendChild(el("span", styles.moveLabel, moveText));
-  headerRight.appendChild(createLocaleSwitch(locale));
-  header.appendChild(headerRight);
-  gameScreen.appendChild(header);
 
-  const boardWrapper = el("div", styles.boardWrapper);
-  boardWrapper.appendChild(createBoard(state));
-  boardWrapper.appendChild(createGoalSection(locale));
-  gameScreen.appendChild(boardWrapper);
-
-  const controls = el("div", styles.controls);
-  controls.appendChild(
-    makeButton(
-      getMessage(locale, "undo"),
-      styles.controlBtn,
-      Actions.UNDO,
-      state.history.length <= 1 || !!state.result
+  const header = h(
+    "div",
+    { style: styles.header },
+    ActionButton({ label: getMessage(locale, "back"), style: styles.backButton, action: Actions.BACK }),
+    h(
+      "div",
+      { style: styles.headerCenter },
+      h("span", { style: styles.headerDiff }, diffText.label),
+      h("span", { style: styles.headerNum }, getMessage(locale, "puzzleNumber", { n: state.puzzleNumber }))
+    ),
+    h(
+      "div",
+      { style: styles.headerRight },
+      h("span", { style: styles.moveLabel }, moveText),
+      LocaleSwitch({ locale })
     )
   );
-  controls.appendChild(
-    makeButton(getMessage(locale, "solveOne"), styles.controlBtn, Actions.SOLVE_ONE, !state.board || !!state.result)
-  );
-  controls.appendChild(
-    makeButton(getMessage(locale, "reset"), styles.controlBtn, Actions.RESET, state.moveCount === 0 || !!state.result)
-  );
-  gameScreen.appendChild(controls);
 
-  const overlay = createResultOverlay(state);
-  if (overlay) gameScreen.appendChild(overlay);
+  const controls = h(
+    "div",
+    { style: styles.controls },
+    ActionButton({
+      label: getMessage(locale, "undo"),
+      style: styles.controlBtn,
+      action: Actions.UNDO,
+      disabled: state.history.length <= 1 || !!state.result,
+    }),
+    ActionButton({
+      label: getMessage(locale, "solveOne"),
+      style: styles.controlBtn,
+      action: Actions.SOLVE_ONE,
+      disabled: !state.board || !!state.result,
+    }),
+    ActionButton({
+      label: getMessage(locale, "reset"),
+      style: styles.controlBtn,
+      action: Actions.RESET,
+      disabled: state.moveCount === 0 || !!state.result,
+    })
+  );
 
-  gameScreen.appendChild(el("p", styles.hint, getMessage(locale, "hint")));
-  container.appendChild(gameScreen);
+  return h(
+    "div",
+    { style: styles.gameScreen },
+    header,
+    h("div", { style: styles.boardWrapper }, Board({ state }), GoalSection({ locale })),
+    controls,
+    ResultOverlay({ state }),
+    h("p", { style: styles.hint }, getMessage(locale, "hint"))
+  );
 }
 
 export function renderApp(root, state) {
   root.textContent = "";
-
-  const container = el("div", styles.container);
-  if (!state.difficulty) {
-    renderTitleScreen(container, state);
-  } else {
-    renderGameScreen(container, state);
-  }
-
-  root.appendChild(container);
+  root.appendChild(
+    h(
+      "div",
+      { style: styles.container },
+      state.difficulty ? GameScreen({ state }) : TitleScreen({ state })
+    )
+  );
 }
+
