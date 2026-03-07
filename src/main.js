@@ -30,8 +30,9 @@ const state = {
   history: [],
   result: null,
   animatingTile: null,
-  usedSolveOne: false,
+  usedHint: false,
   puzzleNumber: 1,
+  hintedTiles: [],
 };
 
 let animTimer = null;
@@ -68,7 +69,8 @@ function startPuzzle(diff) {
   state.history = [state.puzzle.board];
   state.result = null;
   state.animatingTile = null;
-  state.usedSolveOne = false;
+  state.usedHint = false;
+  state.hintedTiles = [];
   update();
 }
 
@@ -77,6 +79,8 @@ function handleTileClick(idx) {
 
   const blank = findBlank(state.board);
   if (!getNeighbors(blank).includes(idx)) return;
+
+  state.hintedTiles = [];
 
   if (animTimer) clearTimeout(animTimer);
   state.animatingTile = idx;
@@ -107,11 +111,12 @@ function handleUndo() {
   state.history = newHistory;
   state.board = newHistory[newHistory.length - 1];
   state.moveCount -= 1;
+  state.hintedTiles = [];
 
   update();
 }
 
-function handleSolveOne() {
+function handleShowHint() {
   if (state.result || !state.board) return;
 
   const currentRank = rankBoard(state.board);
@@ -121,16 +126,21 @@ function handleSolveOne() {
   const blank = findBlank(state.board);
   const neighbors = getNeighbors(blank);
 
+  const optimalMoves = [];
   for (const idx of neighbors) {
     const nextBoard = swap(state.board, blank, idx);
     const nextRank = rankBoard(nextBoard);
     const nextDistance = puzzleIndex.distanceByRank[nextRank];
 
     if (nextDistance === currentDistance - 1) {
-      state.usedSolveOne = true;
-      handleTileClick(idx);
-      return;
+      optimalMoves.push(idx);
     }
+  }
+
+  if (optimalMoves.length > 0) {
+    state.usedHint = true;
+    state.hintedTiles = optimalMoves;
+    update();
   }
 }
 
@@ -142,7 +152,8 @@ function handleReset() {
   state.history = [state.puzzle.board];
   state.result = null;
   state.animatingTile = null;
-  state.usedSolveOne = false;
+  state.usedHint = false;
+  state.hintedTiles = [];
 
   update();
 }
@@ -162,7 +173,8 @@ function handleBack() {
   state.result = null;
   state.animatingTile = null;
   state.puzzleNumber = 1;
-  state.usedSolveOne = false;
+  state.usedHint = false;
+  state.hintedTiles = [];
   update();
 }
 
@@ -207,8 +219,8 @@ const actionHandlers = {
   [Actions.UNDO]: () => {
     handleUndo();
   },
-  [Actions.SOLVE_ONE]: () => {
-    handleSolveOne();
+  [Actions.SHOW_HINT]: () => {
+    handleShowHint();
   },
   [Actions.RESET]: () => {
     handleReset();

@@ -95,10 +95,12 @@ function Board({ state }) {
 
       const movable = !state.result && movableNeighbors.has(idx);
       const isAnimating = state.animatingTile === idx;
+      const isHinted = state.hintedTiles?.includes(idx);
       const tileStyle = {
         ...styles.tile,
         ...(movable ? styles.tileMovable : {}),
         ...(isAnimating ? styles.tileAnimating : {}),
+        ...(isHinted ? styles.tileHinted : {}),
         cursor: movable ? "pointer" : "default",
       };
 
@@ -166,7 +168,7 @@ function ResultOverlay({ state }) {
   const buttons = h(
     "div",
     { style: styles.resultButtons },
-    state.result === "wrong" || state.usedSolveOne
+    state.result === "wrong" || state.usedHint
       ? ActionButton({ label: getMessage(locale, "retry"), style: styles.resultBtn, action: Actions.RESET })
       : null,
     ActionButton({ label: getMessage(locale, "next"), style: styles.resultBtn, action: Actions.NEXT })
@@ -213,9 +215,9 @@ function GameScreen({ state }) {
       disabled: state.history.length <= 1 || !!state.result,
     }),
     ActionButton({
-      label: getMessage(locale, "solveOne"),
+      label: getMessage(locale, "hintAction"),
       style: styles.controlBtn,
-      action: Actions.SOLVE_ONE,
+      action: Actions.SHOW_HINT,
       disabled: !state.board || !!state.result,
     }),
     ActionButton({

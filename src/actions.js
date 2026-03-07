@@ -1,11 +1,11 @@
-export const Actions = Object.freeze({
+export const Actions = {
   START: "start",
   TILE: "tile",
   UNDO: "undo",
-  SOLVE_ONE: "solve-one",
+  SHOW_HINT: "show-hint",
   RESET: "reset",
   NEXT: "next",
   BACK: "back",
   SET_LOCALE: "set-locale",
-});
+};
 

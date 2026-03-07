@@ -181,6 +181,9 @@ export const styles = {
   tileAnimating: {
     transform: "scale(0.93)",
   },
+  tileHinted: {
+    animation: "flashHint 2s ease-out forwards",
+  },
   tileNumber: {
     fontSize: "32px",
     fontWeight: "700",
@@ -301,3 +304,14 @@ export function withHoverStyle(element, hoverStyle, baseStyle) {
     Object.assign(element.style, baseStyle);
   });
 }
+
+const styleTag = document.createElement("style");
+styleTag.textContent = `
+@keyframes flashHint {
+  0% { background: #d4e0ce; box-shadow: inset 0 0 0 3px #4a7c59; transform: scale(0.95); }
+  10% { transform: scale(1); }
+  70% { background: #d4e0ce; box-shadow: inset 0 0 0 3px #4a7c59; }
+  100% { background: #f0e4c8; box-shadow: inset 0 0 0 2px #b89e6e; }
+}
+`;
+document.head.appendChild(styleTag);
