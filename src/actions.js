@@ -7,5 +7,7 @@ export const Actions = {
   NEXT: "next",
   BACK: "back",
   SET_LOCALE: "set-locale",
+  HISTORY: "history",
+  HISTORY_BACK: "history-back",
 };
 

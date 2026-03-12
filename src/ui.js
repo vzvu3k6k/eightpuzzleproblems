@@ -1,4 +1,4 @@
-import { DIFFICULTIES, findBlank, getNeighbors } from "./puzzle.js";
+import { DIFFICULTIES, findBlank, getNeighbors, rankBoard } from "./puzzle.js";
 import { getDifficultyText, getMessage } from "./i18n.js";
 import { styles, withHoverStyle } from "./styles.js";
 import { Actions } from "./actions.js";
@@ -76,6 +76,11 @@ function TitleScreen({ state }) {
       { style: styles.diffGrid },
       DIFFICULTIES.map((d) => DifficultyButton({ locale, difficulty: d }))
     ),
+    ActionButton({
+      label: getMessage(locale, "history"),
+      style: styles.historyButton,
+      action: Actions.HISTORY,
+    }),
     // i18n message includes <br>
     h("p", { style: styles.ruleText, html: getMessage(locale, "ruleText") })
   );
@@ -188,10 +193,17 @@ function GameScreen({ state }) {
     ? getMessage(locale, "moveLabel", { move: state.moveCount, optimal: state.puzzle.optimal })
     : getMessage(locale, "moveLabelNoPuzzle", { move: state.moveCount });
 
+  const backBtn = ActionButton({ label: getMessage(locale, "back"), style: styles.backButton, action: Actions.BACK });
+  withHoverStyle(
+    backBtn,
+    { color: "#2a2016" },
+    { color: "#7a6b52" }
+  );
+
   const header = h(
     "div",
     { style: styles.header },
-    ActionButton({ label: getMessage(locale, "back"), style: styles.backButton, action: Actions.BACK }),
+    backBtn,
     h(
       "div",
       { style: styles.headerCenter },
@@ -239,13 +251,77 @@ function GameScreen({ state }) {
   );
 }
 
-export function renderApp(root, state) {
-  root.textContent = "";
-  root.appendChild(
-    h(
-      "div",
-      { style: styles.container },
-      state.difficulty ? GameScreen({ state }) : TitleScreen({ state })
-    )
+function formatDate(timestamp, locale) {
+  const d = new Date(timestamp);
+  const pad = (n) => String(n).padStart(2, "0");
+  if (locale === "ja") {
+    return `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function HistoryScreen({ state, loadHistory, puzzleIndex }) {
+  const { locale } = state;
+  const entries = loadHistory();
+
+  const backBtn = ActionButton({
+    label: getMessage(locale, "historyBack"),
+    style: styles.historyBackButton,
+    action: Actions.HISTORY_BACK,
+  });
+  withHoverStyle(backBtn, { color: "#2a2016" }, { color: "#7a6b52" });
+
+  const header = h(
+    "div",
+    { style: styles.historyHeader },
+    backBtn,
+    h("span", { style: styles.historyTitle }, getMessage(locale, "history")),
+    h("span", { style: { width: "48px" } })
   );
+
+  if (entries.length === 0) {
+    return h(
+      "div",
+      { style: styles.historyScreen },
+      header,
+      h("p", { style: styles.historyEmpty }, getMessage(locale, "historyEmpty"))
+    );
+  }
+
+  const items = entries.map((entry) => {
+    const diffText = getDifficultyText(locale, entry.difficulty);
+    const rank = rankBoard(entry.initialBoard);
+    const optimal = puzzleIndex.distanceByRank[rank];
+    const resultMark = entry.result === "correct" ? "○" : "×";
+    const resultColor = entry.result === "correct" ? "#4a7c59" : "#8c4a4a";
+
+    return h(
+      "div",
+      { style: styles.historyItem },
+      h("span", { style: { ...styles.historyResult, color: resultColor } }, resultMark),
+      h(
+        "div",
+        { style: styles.historyDetails },
+        h("span", { style: styles.historyMoves }, `${entry.moveCount}/${optimal} — ${diffText.label}`),
+        h("span", { style: styles.historyMeta }, formatDate(entry.timestamp, locale))
+      )
+    );
+  });
+
+  return h("div", { style: styles.historyScreen }, header, h("div", { style: styles.historyList }, items));
+}
+
+export function renderApp(root, state, context) {
+  root.textContent = "";
+
+  let screen;
+  if (state.screen === "history") {
+    screen = HistoryScreen({ state, loadHistory: context.loadHistory, puzzleIndex: context.puzzleIndex });
+  } else if (state.difficulty) {
+    screen = GameScreen({ state });
+  } else {
+    screen = TitleScreen({ state });
+  }
+
+  root.appendChild(h("div", { style: styles.container }, screen));
 }

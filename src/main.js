@@ -21,8 +21,12 @@ if (!root) {
 const puzzleIndex = buildStateIndex();
 const generatePuzzle = createPuzzleGenerator(puzzleIndex);
 
+const HISTORY_KEY = "eightpuzzle-history";
+const HISTORY_MAX = 100;
+
 const state = {
   locale: resolveLocale(navigator.language),
+  screen: "title",
   difficulty: null,
   puzzle: null,
   board: null,
@@ -40,7 +44,35 @@ let animTimer = null;
 function update() {
   document.documentElement.lang = state.locale;
   document.title = getMessage(state.locale, "pageTitle");
-  renderApp(root, state);
+  renderApp(root, state, { loadHistory, puzzleIndex });
+}
+
+function loadHistory() {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveResult() {
+  const entry = {
+    initialBoard: state.puzzle.board,
+    moveCount: state.moveCount,
+    result: state.result,
+    difficulty: state.difficulty.id,
+    usedSolveOne: state.usedSolveOne,
+    timestamp: Date.now(),
+  };
+  const history = loadHistory();
+  history.unshift(entry);
+  if (history.length > HISTORY_MAX) history.length = HISTORY_MAX;
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  } catch {
+    // storage full — silently ignore
+  }
 }
 
 function randomIntInclusive(min, max) {
@@ -62,6 +94,7 @@ function pickTargetMoves(diff) {
 
 function startPuzzle(diff) {
   const targetMoves = pickTargetMoves(diff);
+  state.screen = "game";
   state.difficulty = diff;
   state.puzzle = generatePuzzle(targetMoves);
   state.board = [...state.puzzle.board];
@@ -94,6 +127,7 @@ function handleTileClick(idx) {
 
   if (isSolved(newBoard)) {
     state.result = newMoveCount <= state.puzzle.optimal ? "correct" : "wrong";
+    saveResult();
   }
 
   update();
@@ -165,6 +199,7 @@ function handleNext() {
 }
 
 function handleBack() {
+  state.screen = "title";
   state.difficulty = null;
   state.puzzle = null;
   state.board = null;
@@ -230,6 +265,14 @@ const actionHandlers = {
   },
   [Actions.BACK]: () => {
     handleBack();
+  },
+  [Actions.HISTORY]: () => {
+    state.screen = "history";
+    update();
+  },
+  [Actions.HISTORY_BACK]: () => {
+    state.screen = "title";
+    update();
   },
   [Actions.SET_LOCALE]: (el) => {
     const locale = resolveLocale(el.dataset.locale);
