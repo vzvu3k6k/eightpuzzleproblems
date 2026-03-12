@@ -176,7 +176,7 @@ function ResultOverlay({ state }) {
     state.result === "wrong" || state.usedHint
       ? ActionButton({ label: getMessage(locale, "retry"), style: styles.resultBtn, action: Actions.RESET })
       : null,
-    ActionButton({ label: getMessage(locale, "next"), style: styles.resultBtn, action: Actions.NEXT })
+    ActionButton({ label: getMessage(locale, state.fromHistory ? "backToHistory" : "next"), style: styles.resultBtn, action: Actions.NEXT })
   );
 
   return h(
@@ -288,7 +288,7 @@ function HistoryScreen({ state, loadHistory, puzzleIndex }) {
     );
   }
 
-  const items = entries.map((entry) => {
+  const items = entries.map((entry, index) => {
     const diffText = getDifficultyText(locale, entry.difficulty);
     const rank = rankBoard(entry.initialBoard);
     const optimal = puzzleIndex.distanceByRank[rank];
@@ -297,7 +297,7 @@ function HistoryScreen({ state, loadHistory, puzzleIndex }) {
 
     return h(
       "div",
-      { style: styles.historyItem },
+      { style: styles.historyItem, dataset: { action: Actions.HISTORY_PLAY, historyIndex: index } },
       h("span", { style: { ...styles.historyResult, color: resultColor } }, resultMark),
       h(
         "div",

@@ -9,5 +9,6 @@ export const Actions = {
   SET_LOCALE: "set-locale",
   HISTORY: "history",
   HISTORY_BACK: "history-back",
+  HISTORY_PLAY: "history-play",
 };
 

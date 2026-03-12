@@ -37,6 +37,7 @@ const state = {
   usedHint: false,
   puzzleNumber: 1,
   hintedTiles: [],
+  fromHistory: false,
 };
 
 let animTimer = null;
@@ -104,6 +105,26 @@ function startPuzzle(diff) {
   state.animatingTile = null;
   state.usedHint = false;
   state.hintedTiles = [];
+  state.fromHistory = false;
+  update();
+}
+
+function startPuzzleFromHistory(board, difficultyId) {
+  const rank = rankBoard(board);
+  const optimal = puzzleIndex.distanceByRank[rank];
+  const diff = DIFFICULTIES.find((d) => d.id === difficultyId) || DIFFICULTIES[0];
+
+  state.screen = "game";
+  state.difficulty = diff;
+  state.puzzle = { board, optimal };
+  state.board = [...board];
+  state.moveCount = 0;
+  state.history = [board];
+  state.result = null;
+  state.animatingTile = null;
+  state.usedHint = false;
+  state.hintedTiles = [];
+  state.fromHistory = true;
   update();
 }
 
@@ -193,13 +214,29 @@ function handleReset() {
 }
 
 function handleNext() {
+  if (state.fromHistory) {
+    state.screen = "history";
+    state.fromHistory = false;
+    state.difficulty = null;
+    state.puzzle = null;
+    state.board = null;
+    state.moveCount = 0;
+    state.history = [];
+    state.result = null;
+    state.animatingTile = null;
+    state.usedHint = false;
+    state.hintedTiles = [];
+    update();
+    return;
+  }
   if (!state.difficulty) return;
   state.puzzleNumber += 1;
   startPuzzle(state.difficulty);
 }
 
 function handleBack() {
-  state.screen = "title";
+  state.screen = state.fromHistory ? "history" : "title";
+  state.fromHistory = false;
   state.difficulty = null;
   state.puzzle = null;
   state.board = null;
@@ -273,6 +310,14 @@ const actionHandlers = {
   [Actions.HISTORY_BACK]: () => {
     state.screen = "title";
     update();
+  },
+  [Actions.HISTORY_PLAY]: (el) => {
+    const index = Number(el.dataset.historyIndex);
+    const entries = loadHistory();
+    const entry = entries[index];
+    if (entry) {
+      startPuzzleFromHistory(entry.initialBoard, entry.difficulty);
+    }
   },
   [Actions.SET_LOCALE]: (el) => {
     const locale = resolveLocale(el.dataset.locale);

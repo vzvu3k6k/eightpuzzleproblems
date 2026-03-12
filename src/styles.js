@@ -355,6 +355,7 @@ export const styles = {
     padding: "10px 16px",
     borderRadius: "4px",
     fontSize: "14px",
+    cursor: "pointer",
   },
   historyResult: {
     fontSize: "20px",
