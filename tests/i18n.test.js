@@ -30,3 +30,10 @@ test("hintAction message exists for both locales", () => {
   assert.equal(getMessage("ja", "hintAction"), "ヒント");
   assert.equal(getMessage("en", "hintAction"), "Hint");
 });
+
+test("permalink messages exist for both locales", () => {
+  assert.equal(getMessage("ja", "copyPermalink"), "リンクをコピー");
+  assert.equal(getMessage("en", "copyPermalink"), "Copy Link");
+  assert.equal(getMessage("ja", "invalidPermalinkTitle"), "無効なリンクです");
+  assert.equal(getMessage("en", "invalidPermalinkTitle"), "Invalid Link");
+});

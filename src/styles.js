@@ -239,6 +239,7 @@ export const styles = {
     display: "flex",
     justifyContent: "center",
     gap: "12px",
+    flexWrap: "wrap",
     marginBottom: "16px",
   },
   controlBtn: {
@@ -251,6 +252,13 @@ export const styles = {
     cursor: "pointer",
     transition: "opacity 0.2s",
     letterSpacing: "1px",
+  },
+  permalinkStatus: {
+    textAlign: "center",
+    fontSize: "12px",
+    color: "#7a6b52",
+    minHeight: "18px",
+    margin: "0 0 12px",
   },
   resultOverlay: {
     position: "absolute",
@@ -383,6 +391,37 @@ export const styles = {
     color: "#7a6b52",
     fontSize: "14px",
     padding: "40px 0",
+  },
+  invalidScreen: {
+    width: "100%",
+    maxWidth: "420px",
+    textAlign: "center",
+    background: "#efe4c8",
+    borderRadius: "4px",
+    padding: "40px 28px",
+    boxSizing: "border-box",
+  },
+  invalidTitle: {
+    fontSize: "28px",
+    fontWeight: "700",
+    margin: "0 0 12px",
+    letterSpacing: "2px",
+  },
+  invalidText: {
+    fontSize: "14px",
+    color: "#7a6b52",
+    lineHeight: "1.8",
+    margin: "0 0 24px",
+  },
+  invalidButton: {
+    background: "#2a2016",
+    color: "#e8d5b5",
+    border: "none",
+    padding: "10px 24px",
+    fontFamily: "inherit",
+    fontSize: "14px",
+    cursor: "pointer",
+    letterSpacing: "2px",
   },
 };
 

@@ -176,7 +176,11 @@ function ResultOverlay({ state }) {
     state.result === "wrong" || state.usedHint
       ? ActionButton({ label: getMessage(locale, "retry"), style: styles.resultBtn, action: Actions.RESET })
       : null,
-    ActionButton({ label: getMessage(locale, state.fromHistory ? "backToHistory" : "next"), style: styles.resultBtn, action: Actions.NEXT })
+    ActionButton({
+      label: getMessage(locale, state.fromHistory ? "backToHistory" : state.fromPermalink ? "backToTitle" : "next"),
+      style: styles.resultBtn,
+      action: Actions.NEXT,
+    })
   );
 
   return h(
@@ -188,7 +192,10 @@ function ResultOverlay({ state }) {
 
 function GameScreen({ state }) {
   const { locale } = state;
-  const diffText = getDifficultyText(locale, state.difficulty.id);
+  const diffLabel =
+    state.fromPermalink || !state.difficulty
+      ? getMessage(locale, "sharedPuzzle")
+      : getDifficultyText(locale, state.difficulty.id).label;
   const moveText = state.puzzle
     ? getMessage(locale, "moveLabel", { move: state.moveCount, optimal: state.puzzle.optimal })
     : getMessage(locale, "moveLabelNoPuzzle", { move: state.moveCount });
@@ -205,10 +212,14 @@ function GameScreen({ state }) {
     { style: styles.header },
     backBtn,
     h(
-      "div",
-      { style: styles.headerCenter },
-      h("span", { style: styles.headerDiff }, diffText.label),
-      h("span", { style: styles.headerNum }, getMessage(locale, "puzzleNumber", { n: state.puzzleNumber }))
+    "div",
+    { style: styles.headerCenter },
+      h("span", { style: styles.headerDiff }, diffLabel),
+      h(
+        "span",
+        { style: styles.headerNum },
+        state.fromPermalink ? "" : getMessage(locale, "puzzleNumber", { n: state.puzzleNumber })
+      )
     ),
     h(
       "div",
@@ -237,6 +248,12 @@ function GameScreen({ state }) {
       style: styles.controlBtn,
       action: Actions.RESET,
       disabled: state.moveCount === 0 || !!state.result,
+    }),
+    ActionButton({
+      label: getMessage(locale, "copyPermalink"),
+      style: styles.controlBtn,
+      action: Actions.COPY_PERMALINK,
+      disabled: !state.puzzle,
     })
   );
 
@@ -246,6 +263,11 @@ function GameScreen({ state }) {
     header,
     h("div", { style: styles.boardWrapper }, Board({ state }), GoalSection({ locale })),
     controls,
+    h(
+      "p",
+      { style: styles.permalinkStatus },
+      state.permalinkStatus ? getMessage(locale, state.permalinkStatus) : ""
+    ),
     ResultOverlay({ state }),
     h("p", { style: styles.hint }, getMessage(locale, "hint"))
   );
@@ -311,13 +333,33 @@ function HistoryScreen({ state, loadHistory, puzzleIndex }) {
   return h("div", { style: styles.historyScreen }, header, h("div", { style: styles.historyList }, items));
 }
 
+function InvalidPermalinkScreen({ state }) {
+  const { locale } = state;
+
+  return h(
+    "div",
+    { style: styles.invalidScreen },
+    h("h1", { style: styles.invalidTitle }, getMessage(locale, "invalidPermalinkTitle")),
+    h("p", { style: styles.invalidText }, getMessage(locale, "invalidPermalinkText")),
+    ActionButton({
+      label: getMessage(locale, "backToTitle"),
+      style: styles.invalidButton,
+      action: Actions.INVALID_PERMALINK_BACK,
+    })
+  );
+}
+
 export function renderApp(root, state, context) {
   root.textContent = "";
 
   let screen;
-  if (state.screen === "history") {
+  if (state.screen === "invalid-permalink") {
+    screen = InvalidPermalinkScreen({ state });
+  } else if (state.screen === "history") {
     screen = HistoryScreen({ state, loadHistory: context.loadHistory, puzzleIndex: context.puzzleIndex });
   } else if (state.difficulty) {
+    screen = GameScreen({ state });
+  } else if (state.screen === "game" && state.puzzle) {
     screen = GameScreen({ state });
   } else {
     screen = TitleScreen({ state });

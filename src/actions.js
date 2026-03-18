@@ -10,5 +10,6 @@ export const Actions = {
   HISTORY: "history",
   HISTORY_BACK: "history-back",
   HISTORY_PLAY: "history-play",
+  COPY_PERMALINK: "copy-permalink",
+  INVALID_PERMALINK_BACK: "invalid-permalink-back",
 };
-
