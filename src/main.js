@@ -406,6 +406,11 @@ function handleKeyDown(e) {
     handleTileClick(target);
   }
 
+  if (e.key.toLowerCase() === "u") {
+    e.preventDefault();
+    handleUndo();
+  }
+
   if (e.key.toLowerCase() === "z" && (e.ctrlKey || e.metaKey)) {
     e.preventDefault();
     handleUndo();
