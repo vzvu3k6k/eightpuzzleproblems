@@ -170,17 +170,20 @@ function ResultOverlay({ state }) {
           ),
         ];
 
+  const nextBtn = ActionButton({
+    label: getMessage(locale, state.fromHistory ? "backToHistory" : state.fromPermalink ? "backToTitle" : "next"),
+    style: styles.resultBtn,
+    action: Actions.NEXT,
+  });
+  requestAnimationFrame(() => nextBtn.focus());
+
   const buttons = h(
     "div",
     { style: styles.resultButtons },
     state.result === "wrong" || state.usedHint
       ? ActionButton({ label: getMessage(locale, "retry"), style: styles.resultBtn, action: Actions.RESET })
       : null,
-    ActionButton({
-      label: getMessage(locale, state.fromHistory ? "backToHistory" : state.fromPermalink ? "backToTitle" : "next"),
-      style: styles.resultBtn,
-      action: Actions.NEXT,
-    })
+    nextBtn
   );
 
   return h(
