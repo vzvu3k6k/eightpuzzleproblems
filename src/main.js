@@ -396,10 +396,10 @@ function handleKeyDown(e) {
   const col = blank % 3;
 
   let target = -1;
-  if (e.key === "ArrowUp" && row < 2) target = blank + 3;
-  if (e.key === "ArrowDown" && row > 0) target = blank - 3;
-  if (e.key === "ArrowLeft" && col < 2) target = blank + 1;
-  if (e.key === "ArrowRight" && col > 0) target = blank - 1;
+  if ((e.key === "ArrowUp" || e.key.toLowerCase() === "w") && row < 2) target = blank + 3;
+  if ((e.key === "ArrowDown" || e.key.toLowerCase() === "s") && row > 0) target = blank - 3;
+  if ((e.key === "ArrowLeft" || e.key.toLowerCase() === "a") && col < 2) target = blank + 1;
+  if ((e.key === "ArrowRight" || e.key.toLowerCase() === "d") && col > 0) target = blank - 1;
 
   if (target >= 0) {
     e.preventDefault();
