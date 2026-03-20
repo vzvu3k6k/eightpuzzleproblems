@@ -415,6 +415,11 @@ function handleKeyDown(e) {
     e.preventDefault();
     handleUndo();
   }
+
+  if (e.key === "H") {
+    e.preventDefault();
+    handleShowHint();
+  }
 }
 
 function parseDifficulty(value) {
