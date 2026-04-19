@@ -240,7 +240,7 @@ function handleTileClick(idx) {
 
   animTimer = setTimeout(() => {
     state.animatingTile = null;
-    update();
+    if (!state.result) update();
   }, 150);
 }
 

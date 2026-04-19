@@ -1,6 +1,6 @@
 import { DIFFICULTIES, findBlank, getNeighbors, rankBoard } from "./puzzle.js";
 import { getDifficultyText, getMessage } from "./i18n.js";
-import { styles, withHoverStyle } from "./styles.js";
+import { styles, tokens, withHoverStyle } from "./styles.js";
 import { Actions } from "./actions.js";
 import { h } from "./dom.js";
 
@@ -40,12 +40,16 @@ function LocaleSwitch({ locale }) {
   );
 }
 
-function DifficultyButton({ locale, difficulty }) {
+function DifficultyButton({ locale, difficulty, index = 0 }) {
   const diffText = getDifficultyText(locale, difficulty.id);
+  const buttonStyle = {
+    ...styles.diffButton,
+    animationDelay: `${260 + index * 60}ms`,
+  };
   const button = h(
     "button",
     {
-      style: styles.diffButton,
+      style: buttonStyle,
       dataset: { action: Actions.START, difficultyId: difficulty.id },
     },
     h("span", { style: styles.diffKanji }, diffText.badge),
@@ -54,8 +58,18 @@ function DifficultyButton({ locale, difficulty }) {
 
   withHoverStyle(
     button,
-    { background: "#2a2016", color: "#e8d5b5" },
-    { background: "transparent", color: "#2a2016" }
+    {
+      background: tokens.ink,
+      color: tokens.tileIdle,
+      transform: "translateY(-1px)",
+      boxShadow: "0 6px 14px -8px rgba(42,32,22,0.45)",
+    },
+    {
+      background: "transparent",
+      color: tokens.ink,
+      transform: "translateY(0)",
+      boxShadow: "none",
+    }
   );
 
   return button;
@@ -69,12 +83,12 @@ function TitleScreen({ state }) {
     { style: styles.titleScreen },
     h("div", { style: styles.titleTopRow }, LocaleSwitch({ locale })),
     h("div", { style: styles.titleKanji }, getMessage(locale, "titleKanji")),
-    h("h1", { style: styles.titleMain }, getMessage(locale, "titleMain")),
-    h("p", { style: styles.titleSub }, getMessage(locale, "titleSub")),
+    h("h1", { style: { ...styles.titleMain, ...styles.titleMainAnim } }, getMessage(locale, "titleMain")),
+    h("p", { style: { ...styles.titleSub, ...styles.titleSubAnim } }, getMessage(locale, "titleSub")),
     h(
       "div",
       { style: styles.diffGrid },
-      DIFFICULTIES.map((d) => DifficultyButton({ locale, difficulty: d }))
+      DIFFICULTIES.map((d, index) => DifficultyButton({ locale, difficulty: d, index }))
     ),
     ActionButton({
       label: getMessage(locale, "history"),
@@ -142,7 +156,7 @@ function ResultOverlay({ state }) {
   const { locale } = state;
   const resultCardStyle = {
     ...styles.resultCard,
-    borderColor: state.result === "correct" ? "#4a7c59" : "#8c4a4a",
+    borderColor: state.result === "correct" ? tokens.matcha : tokens.vermilion,
   };
 
   const body =
@@ -157,7 +171,7 @@ function ResultOverlay({ state }) {
             {
               style: {
                 ...styles.resultKanji,
-                color: "#8c4a4a",
+                color: tokens.vermilion,
                 fontSize: locale === "en" ? "44px" : styles.resultKanji.fontSize,
               },
             },
@@ -206,8 +220,8 @@ function GameScreen({ state }) {
   const backBtn = ActionButton({ label: getMessage(locale, "back"), style: styles.backButton, action: Actions.BACK });
   withHoverStyle(
     backBtn,
-    { color: "#2a2016" },
-    { color: "#7a6b52" }
+    { color: tokens.ink },
+    { color: tokens.sub }
   );
 
   const header = h(
@@ -294,7 +308,7 @@ function HistoryScreen({ state, loadHistory, puzzleIndex }) {
     style: styles.historyBackButton,
     action: Actions.HISTORY_BACK,
   });
-  withHoverStyle(backBtn, { color: "#2a2016" }, { color: "#7a6b52" });
+  withHoverStyle(backBtn, { color: tokens.ink }, { color: tokens.sub });
 
   const header = h(
     "div",
@@ -318,7 +332,7 @@ function HistoryScreen({ state, loadHistory, puzzleIndex }) {
     const rank = rankBoard(entry.initialBoard);
     const optimal = puzzleIndex.distanceByRank[rank];
     const resultMark = entry.result === "correct" ? "○" : "×";
-    const resultColor = entry.result === "correct" ? "#4a7c59" : "#8c4a4a";
+    const resultColor = entry.result === "correct" ? tokens.matcha : tokens.vermilion;
 
     return h(
       "div",
